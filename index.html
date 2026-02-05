@@ -205,15 +205,17 @@ const icsData = await response.text();
     
     // Wait for DOM to be ready
     document.addEventListener('DOMContentLoaded', function() {
-      updateDateTime();
-      loadCalendar();
-      
-      // Update time every minute
-      setInterval(updateDateTime, 60000);
-      
-      // Reload calendar every 15 minutes
-      setInterval(loadCalendar, 15 * 60 * 1000);
-    });
+  document.getElementById('jsTest').textContent = 'WORKING!';
+  
+  updateDateTime();
+  loadCalendar();
+  
+  // Update time every minute
+  setInterval(updateDateTime, 60000);
+  
+  // Reload calendar every 15 minutes
+  setInterval(loadCalendar, 15 * 60 * 1000);
+});
     
     document.getElementById('jsTest').textContent = 'WORKING!';
   </script>
