@@ -110,11 +110,9 @@
       try {
         console.log('Fetching calendar from:', calendarUrl);
         
-        // Try direct fetch first (Google Calendar usually allows CORS)
-        const response = await fetch(calendarUrl);
-        
-        const response = await fetch(fetchUrl);
-        const icsData = await response.text();
+       // Fetch calendar directly from Google
+const response = await fetch(calendarUrl);
+const icsData = await response.text();
         
         // Parse the iCal data
         const jcalData = ICAL.parse(icsData);
