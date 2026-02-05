@@ -110,9 +110,8 @@
       try {
         console.log('Fetching calendar from:', calendarUrl);
         
-        // Use CORS proxy if needed
-        const corsProxy = 'https://corsproxy.io/?';
-        const fetchUrl = corsProxy + encodeURIComponent(calendarUrl);
+        // Try direct fetch first (Google Calendar usually allows CORS)
+        const response = await fetch(calendarUrl);
         
         const response = await fetch(fetchUrl);
         const icsData = await response.text();
