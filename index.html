@@ -110,8 +110,9 @@
       try {
         console.log('Fetching calendar from:', calendarUrl);
         
-       // Fetch calendar directly from Google
-const response = await fetch(calendarUrl);
+       // Use Apps Script as proxy to bypass CORS
+const proxyUrl = 'https://script.google.com/macros/s/AKfycbyODd-JkBS_X8aevgnDJ4S-CUnY1QcrBWFyrQUmxWKEJ-EH3yn_TuBA-b8_I_lp5DLElg/exec?ical=' + encodeURIComponent(calendarUrl);
+const response = await fetch(proxyUrl);
 const icsData = await response.text();
         
         // Parse the iCal data
