@@ -111,11 +111,23 @@
     }
     
     async function loadCalendar() {
-      try {
-        if (typeof ICAL === 'undefined') {
-  document.getElementById('eventsContainer').innerHTML = '<div class="no-events">Error: ICAL library failed to load</div>';
-  return;
-}
+  try {
+    document.getElementById('eventsContainer').innerHTML = '<div class="loading">Step 1: Starting...</div>';
+    
+    if (typeof ICAL === 'undefined') {
+      document.getElementById('eventsContainer').innerHTML = '<div class="no-events">Error: ICAL library failed to load</div>';
+      return;
+    }
+    
+    document.getElementById('eventsContainer').innerHTML = '<div class="loading">Step 2: Fetching data...</div>';
+    console.log('Fetching calendar from:', calendarUrl);
+    
+    // Use Apps Script as proxy to bypass CORS
+    const proxyUrl = 'https://script.google.com/macros/s/AKfycbyODd-JkBS_X8aevgnDJ4S-CUnY1QcrBWFyrQUmxWKEJ-EH3yn_TuBA-b8_I_lp5DLElg/exec?ical=' + encodeURIComponent(calendarUrl);
+    const response = await fetch(proxyUrl);
+    const icsData = await response.text();
+    
+    document.getElementById('eventsContainer').innerHTML = '<div class="loading">Step 3: Parsing data...</div>';
         console.log('Fetching calendar from:', calendarUrl);
         
        // Use Apps Script as proxy to bypass CORS
