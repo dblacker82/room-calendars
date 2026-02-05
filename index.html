@@ -109,34 +109,29 @@
     }
     
     async function loadCalendar() {
-  try {
-    document.getElementById('eventsContainer').innerHTML = '<div class="loading">Step 1: Starting...</div>';
-    
-    if (typeof ICAL === 'undefined') {
-      document.getElementById('eventsContainer').innerHTML = '<div class="no-events">Error: ICAL library failed to load</div>';
-      return;
-    }
-    
-    document.getElementById('eventsContainer').innerHTML = '<div class="loading">Step 2: Fetching data...</div>';
-    console.log('Fetching calendar from:', calendarUrl);
-    
-    // Use Apps Script as proxy to bypass CORS
-    const proxyUrl = 'https://script.google.com/macros/s/AKfycbyODd-JkBS_X8aevgnDJ4S-CUnY1QcrBWFyrQUmxWKEJ-EH3yn_TuBA-b8_I_lp5DLElg/exec?ical=' + encodeURIComponent(calendarUrl);
-    const response = await fetch(proxyUrl);
-    const icsData = await response.text();
-    
-    document.getElementById('eventsContainer').innerHTML = '<div class="loading">Step 3: Parsing data...</div>';
-        console.log('Fetching calendar from:', calendarUrl);
+      try {
+        document.getElementById('eventsContainer').innerHTML = '<div class="loading">Step 1: Starting...</div>';
         
-       // Use Apps Script as proxy to bypass CORS
-const proxyUrl = 'https://script.google.com/macros/s/AKfycbyODd-JkBS_X8aevgnDJ4S-CUnY1QcrBWFyrQUmxWKEJ-EH3yn_TuBA-b8_I_lp5DLElg/exec?ical=' + encodeURIComponent(calendarUrl);
-const response = await fetch(proxyUrl);
-const icsData = await response.text();
+        if (typeof ICAL === 'undefined') {
+          document.getElementById('eventsContainer').innerHTML = '<div class="no-events">Error: ICAL library failed to load</div>';
+          return;
+        }
+        
+        document.getElementById('eventsContainer').innerHTML = '<div class="loading">Step 2: Fetching data...</div>';
+        
+        // Use Apps Script as proxy to bypass CORS
+        const proxyUrl = 'https://script.google.com/macros/s/AKfycbyODd-JkBS_X8aevgnDJ4S-CUnY1QcrBWFyrQUmxWKEJ-EH3yn_TuBA-b8_I_lp5DLElg/exec?ical=' + encodeURIComponent(calendarUrl);
+        const response = await fetch(proxyUrl);
+        const icsData = await response.text();
+        
+        document.getElementById('eventsContainer').innerHTML = '<div class="loading">Step 3: Parsing data...</div>';
         
         // Parse the iCal data
         const jcalData = ICAL.parse(icsData);
         const comp = new ICAL.Component(jcalData);
         const vevents = comp.getAllSubcomponents('vevent');
+        
+        document.getElementById('eventsContainer').innerHTML = '<div class="loading">Step 4: Processing events...</div>';
         
         // Get events for the next 7 days
         const now = new Date();
@@ -154,13 +149,15 @@ const icsData = await response.text();
               title: event.summary,
               start: startDate,
               end: endDate,
-              allDay: event.startDate.isDate // All-day events don't have time component
+              allDay: event.startDate.isDate
             });
           }
         });
         
         // Sort events by start time
         events.sort((a, b) => a.start - b.start);
+        
+        document.getElementById('eventsContainer').innerHTML = '<div class="loading">Step 5: Displaying events...</div>';
         
         const container = document.getElementById('eventsContainer');
         
@@ -197,7 +194,7 @@ const icsData = await response.text();
           container.appendChild(eventDiv);
         });
         
-} catch (error) {
+      } catch (error) {
         console.error('Error loading calendar:', error);
         document.getElementById('eventsContainer').innerHTML = '<div class="no-events">Error: ' + error.message + '</div>';
       }
@@ -205,19 +202,17 @@ const icsData = await response.text();
     
     // Wait for DOM to be ready
     document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('jsTest').textContent = 'WORKING!';
-  
-  updateDateTime();
-  loadCalendar();
-  
-  // Update time every minute
-  setInterval(updateDateTime, 60000);
-  
-  // Reload calendar every 15 minutes
-  setInterval(loadCalendar, 15 * 60 * 1000);
-});
-    
-    document.getElementById('jsTest').textContent = 'WORKING!';
+      document.getElementById('jsTest').textContent = 'WORKING!';
+      
+      updateDateTime();
+      loadCalendar();
+      
+      // Update time every minute
+      setInterval(updateDateTime, 60000);
+      
+      // Reload calendar every 15 minutes
+      setInterval(loadCalendar, 15 * 60 * 1000);
+    });
   </script>
 </body>
 </html>
