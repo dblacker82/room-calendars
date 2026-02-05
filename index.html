@@ -74,6 +74,10 @@
   <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
 </head>
 <body>
+  <body>
+  <div style="background: red; color: white; padding: 10px;">JavaScript Test: <span id="jsTest">NOT LOADED</span></div>
+  
+  <div class="header">
   <div class="header">
     <div class="date-display" id="dateDisplay">Loading...</div>
     <div class="time-display" id="timeDisplay"></div>
@@ -200,6 +204,10 @@ const icsData = await response.text();
       // Reload calendar every 15 minutes
       setInterval(loadCalendar, 15 * 60 * 1000);
     });
+    
+    document.getElementById('jsTest').textContent = 'WORKING!';
+  </script>
+</body>
   </script>
 </body>
 </html>
