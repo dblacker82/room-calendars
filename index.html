@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Room Calendar</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: #ffffff;
+      color: #333;
+    }
+    
+    .header {
+      margin-bottom: 30px;
+      border-bottom: 3px solid #4285f4;
+      padding-bottom: 15px;
+    }
+    
+    .date-display {
+      font-size: 36px;
+      font-weight: 300;
+      color: #202124;
+    }
+    
+    .time-display {
+      font-size: 18px;
+      color: #5f6368;
+      margin-top: 5px;
+    }
+    
+    .event {
+      background: #f8f9fa;
+      border-left: 4px solid #4285f4;
+      margin: 15px 0;
+      padding: 15px 20px;
+      border-radius: 4px;
+    }
+    
+    .event.happening-now {
+      background: #e8f0fe;
+      border-left-color: #1967d2;
+    }
+    
+    .event-time {
+      font-size: 16px;
+      color: #5f6368;
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    
+    .event-title {
+      font-size: 20px;
+      color: #202124;
+      font-weight: 400;
+    }
+    
+    .no-events {
+      text-align: center;
+      color: #5f6368;
+      font-size: 18px;
+      margin-top: 50px;
+    }
+    
+    .loading {
+      text-align: center;
+      color: #5f6368;
+      font-size: 18px;
+      margin-top: 50px;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
+</head>
+<body>
+  <div class="header">
+    <div class="date-display" id="dateDisplay">Loading...</div>
+    <div class="time-display" id="timeDisplay"></div>
+  </div>
+  
+  <div id="eventsContainer" class="loading">
+    Loading calendar...
+  </div>
+
+  <script>
+    // Get calendar URL from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const calendarUrl = urlParams.get('cal') || 'https://calendar.google.com/calendar/ical/c_e7ac860cd4b952e9bcb436b920e8c2c700df1c9db4cb0378173170e52f4aebb6%40group.calendar.google.com/public/basic.ics';
+    
+    function updateDateTime() {
+      const now = new Date();
+      const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+      
+      document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', dateOptions);
+      document.getElementById('timeDisplay').textContent = now.toLocaleTimeString('en-US', timeOptions);
+    }
+    
+    function formatTime(date) {
+      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    }
+    
+    function isHappeningNow(start, end) {
+      const now = new Date();
+      return now >= start && now <= end;
+    }
+    
+    async function loadCalendar() {
+      try {
+        console.log('Fetching calendar from:', calendarUrl);
+        
+        // Use CORS proxy if needed
+        const corsProxy = 'https://corsproxy.io/?';
+        const fetchUrl = corsProxy + encodeURIComponent(calendarUrl);
+        
+        const response = await fetch(fetchUrl);
+        const icsData = await response.text();
+        
+        // Parse the iCal data
+        const jcalData = ICAL.parse(icsData);
+        const comp = new ICAL.Component(jcalData);
+        const vevents = comp.getAllSubcomponents('vevent');
+        
+        // Get events for the next 7 days
+        const now = new Date();
+        const weekFromNow = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000));
+        
+        const events = [];
+        vevents.forEach(vevent => {
+          const event = new ICAL.Event(vevent);
+          const startDate = event.startDate.toJSDate();
+          const endDate = event.endDate.toJSDate();
+          
+          // Only include events within the next 7 days
+          if (startDate <= weekFromNow) {
+            events.push({
+              title: event.summary,
+              start: startDate,
+              end: endDate,
+              allDay: event.startDate.isDate // All-day events don't have time component
+            });
+          }
+        });
+        
+        // Sort events by start time
+        events.sort((a, b) => a.start - b.start);
+        
+        const container = document.getElementById('eventsContainer');
+        
+        if (events.length === 0) {
+          container.innerHTML = '<div class="no-events">No upcoming events this week</div>';
+          return;
+        }
+        
+        container.innerHTML = '';
+        
+        events.forEach(event => {
+          const eventDiv = document.createElement('div');
+          eventDiv.className = 'event';
+          
+          if (isHappeningNow(event.start, event.end)) {
+            eventDiv.classList.add('happening-now');
+          }
+          
+          const timeDiv = document.createElement('div');
+          timeDiv.className = 'event-time';
+          
+          if (event.allDay) {
+            timeDiv.textContent = 'All Day';
+          } else {
+            timeDiv.textContent = formatTime(event.start) + ' - ' + formatTime(event.end);
+          }
+          
+          const titleDiv = document.createElement('div');
+          titleDiv.className = 'event-title';
+          titleDiv.textContent = event.title;
+          
+          eventDiv.appendChild(timeDiv);
+          eventDiv.appendChild(titleDiv);
+          container.appendChild(eventDiv);
+        });
+        
+      } catch (error) {
+        console.error('Error loading calendar:', error);
+        document.getElementById('eventsContainer').innerHTML = '<div class="no-events">Error loading calendar</div>';
+      }
+    }
+    
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+      updateDateTime();
+      loadCalendar();
+      
+      // Update time every minute
+      setInterval(updateDateTime, 60000);
+      
+      // Reload calendar every 15 minutes
+      setInterval(loadCalendar, 15 * 60 * 1000);
+    });
+  </script>
+</body>
+</html>
