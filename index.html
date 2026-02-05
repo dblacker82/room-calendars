@@ -108,6 +108,10 @@
     
     async function loadCalendar() {
       try {
+        if (typeof ICAL === 'undefined') {
+  document.getElementById('eventsContainer').innerHTML = '<div class="no-events">Error: ICAL library failed to load</div>';
+  return;
+}
         console.log('Fetching calendar from:', calendarUrl);
         
        // Use Apps Script as proxy to bypass CORS
@@ -180,9 +184,9 @@ const icsData = await response.text();
         });
         
       } catch (error) {
-        console.error('Error loading calendar:', error);
-        document.getElementById('eventsContainer').innerHTML = '<div class="no-events">Error loading calendar</div>';
-      }
+  console.error('Error loading calendar:', error);
+  document.getElementById('eventsContainer').innerHTML = '<div class="no-events">Error: ' + error.message + '</div>';
+}
     }
     
     // Wait for DOM to be ready
